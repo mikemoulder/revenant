@@ -105,7 +105,12 @@ neatlogs join CONFIRMED: `traces list --session <claude id>`    one trace per us
 Push of a commit with a NEW checkpoint fails: "main -> main    Entire's pre-push hook pushes the checkpoint ref
   (failed)". Seen on 05a4624 and f363a59                      fine, main is rejected. Second push succeeds.
                                                                Always: `git push || git push`
-verify --setup "<cmd>" runs before the tests                    natural place for the caught-failure retry
+verify --setup "<cmd>" that FAILS is ignored;                   Revenant runs setup itself (src/replay.ts),
+  verify runs the tests anyway                                 so the failure is a real ERROR span + retry
+verify wording: PASS | NO EFFECT | REGRESSION in N |           "(exit N)" forms are exit-code only -> unknown.
+  PASS (exit 0) | FAIL (exit N)                                an unchanged suite says NO EFFECT, not PASS
+neatlogs public API (raw-spans) omits span attributes           ids are duplicated into span input
+neatlogs SDK logs INFO to stdout, level read at import          NEATLOGS_LOG_LEVEL=WARN before dynamic import
 ```
 
 ## What is real, what is staged

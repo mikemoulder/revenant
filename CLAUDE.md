@@ -22,9 +22,13 @@ judgment that does not quote its evidence becomes a freeze.
 
 ## Commands
 
-The language and test runner are chosen by `/skillz:architecture`. Fill in the commands here once that decision lands.
+TypeScript run directly by Node 22 (no build step). Architecture: `docs/architecture-brief.md`.
 
 ```bash
+npm run typecheck                            # cheapest useful check, before every commit
+node src/cli.ts replay <sha>... --repo <path> [--json]   # exam from <path>/revenant.config.json
+git push || git push                         # first push after a new checkpoint fails, see memory.md
+
 # replay engine (verify exits 0 even on a regression: read the VERDICT: line)
 entire graph verify --record-baseline        # at the parent
 entire graph verify --pre-edit-baseline      # at the commit
@@ -39,13 +43,15 @@ No deployed URL is required. The demo is the CLI and the ledger, recorded on vid
 
 ## The demo path
 
-These files are what gets judged. Verify changes to them with a real run on the fixture, not just a green build. Paths go here once the architecture is set:
+These files are what gets judged. Verify changes to them with a real run on the fixture, not just a green build:
 
 ```text
-replay engine      three verify runs in scratch worktrees (.revenant/worktrees/)
-worker             resolve, testimony, exam, replay, warrant, stale, verdict
-coordinator        enumerate, dispatch, reverts newest first, HEAD check, one PR
-ledger             .revenant/ledger.jsonl (committed, Revenant-Ledger trailer)
+src/replay.ts           verify runs in scratch worktrees (.revenant/worktrees/), retry once
+src/decide.ts           the decision table. v1 today; v2 adds the parent's exam
+src/seams/entire.ts     verify wrapper + VERDICT parser (exit code is always 0)
+src/seams/trace.ts      neatlogs spans: every step named, ids in attributes AND input
+src/cli.ts              entry point
+not yet                 worker (resolve, warrant), coordinator, ledger
 ```
 
 ## Sponsor tools are evidence, keep them on
