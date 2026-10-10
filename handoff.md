@@ -4,14 +4,17 @@
 
 ## Next step
 
-Build order step 4: v2. In `src/replay.ts`, add the third replay. Take the commit's code,
-restore the parent's exam files (delete files the commit added), and run verify against the
-same baseline. Then `decideV2` (an exam edit that regresses = "needs warrant"; freeze until the
-warrant lands in step 5). Run v1 then v2 on fixture 87930b6, 51ba831 and 2a6d0a0, and keep both
-traces. That is the before/after.
+Build order step 5: checkpoint reading and the warrant. Add `src/seams/entire.ts`
+checkpointFor(sha) using `entire checkpoint explain <sha> --json` and the transcript's
+prompts. Make "no checkpoint" a freeze (fixture 3110c56). Then the warrant: a single model call
+in `src/seams/model.ts` (load the claude-api skill first) that answers authorized,
+not_authorized or unclear, with a verbatim quote that is checked against the prompt. A missing
+or non-verbatim quote means freeze. The target is fixture 87930b6 going FREEZE -> KEEP, quoting
+"roundCents rounds some half-cent amounts down".
 
-Fixture master (local, not on GitHub yet) holds all four cases; see the fixture README table.
-v1 results so far: 2a6d0a0 KEEP, 87930b6 KEEP (blind to the test edit), 51ba831 REVERT.
+v2 is done: see evidence/before-after.md (v1 KEEP -> v2 FREEZE on 87930b6; traces
+85359cd7 v1 21 spans, 6893f0c7 v2 30 spans). evidence/before-after.md links the fixture by
+relative path; switch it to the GitHub URL once the fixture is published.
 
 ## History of the case 2 search (resolved by the pitch reframe, see memory.md Decisions)
 
@@ -80,7 +83,7 @@ Phase              Build order step                                       Status
 Foundation         1  repo, types, config                                  done
 Walking skeleton   2  replay engine v1, neatlogs spans                     done
 The aha path       3  fixture repo: keep, keep-with-warrant, revert, freeze  done
-                   4  run v1 on fixture (keep traces) -> add v2 (parent's exam) -> rerun
+                   4  v2 parent's exam + before/after                    done
                    5  checkpoint reading, claims, warrant w/ quote
 Rest of the demo   6  ledger + restart, freeze reasons
                    7  coordinator: reverts newest first, HEAD check, PR

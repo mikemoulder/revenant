@@ -44,8 +44,9 @@ reading lands; neither version reads checkpoints yet.
 | Run | Trace | Spans | Duration |
 |---|---|---|---|
 | v1, 4 commits | `85359cd78c93039e32ab5276718a059f` | 21 | 76.3 s |
-| v2, 4 commits | `6893f0c7da7457945550afcff17144fc` | still finalizing when this was written | |
+| v2, 4 commits | `6893f0c7da7457945550afcff17144fc` | 30 | 112.3 s |
 | v2, `87930b6` alone | `bf259ea0b52937e46cdc7ecde6c12e7e` | 9 | 26.6 s |
 
-No model calls yet, so cost per audit is $0 plus compute. The extra replay costs one more
-worktree, `npm ci` and test run per commit that touches a test file.
+No model calls yet, so cost per audit is $0 plus compute: about 19 s per commit in v1 and 28 s
+in v2. The extra replay costs one more worktree, `npm ci` and test run per commit that touches
+a test file (3 of the 4 here). neatlogs took a few minutes to finalize the v2 trace.
