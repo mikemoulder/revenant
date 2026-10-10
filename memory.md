@@ -1,0 +1,94 @@
+# Project memory
+
+## What this is
+
+Revenant catches commits where a coding agent got the tests to pass by editing the tests,
+then reverts those commits. It replays each commit against its parent's tests through
+`entire graph verify`. It reads the prompt from the commit's Entire checkpoint to decide
+whether the test change was allowed. Its output is a ledger: keep, revert, stale or
+freeze. Source design: `../REVENANT.md`.
+
+## Stack
+
+```text
+language / runner   TBD by /skillz:architecture (jest confirmed with verify; pytest unconfirmed)
+Entire CLI          0.11.4, ~/.local/bin/entire. commit_linking: always (.entire/settings.json)
+neatlogs CLI        0.2.0. Claude Code plugin set up globally (~/.claude/settings.json)
+host                none needed. CLI plus a committed ledger; GitHub for the revert PR
+```
+
+## Architecture
+
+The coordinator lists the commits since a watermark and skips Revenant's own ledger commits. It hands
+one commit to each worker. Workers share no memory, and every replay is pinned to fixed SHAs,
+so workers run in parallel. The coordinator applies reverts newest first on a scratch
+copy of HEAD.
+
+```text
+commit -> trailer -> checkpoint -> sessions/prompts -> neatlogs trace (session id join)
+       -> replays: parent baseline | as committed | commit code + parent's exam
+       -> warrant (model, must quote) -> stale (graph impact) -> verdict -> ledger row
+```
+
+## Decisions
+
+```text
+Four verdicts: keep, revert, stale, freeze. No "contested"
+  why:        Entire attribution is per commit, with no line ranges, so a mixed commit freezes
+  instead of: hunk splitting (cut)
+
+Replays compare commit vs parent, never vs current tree
+  why:        a later commit's breakage must not get this one reverted
+
+The prompt is the warrant
+  why:        same diff, different prompt, different verdict (fixture cases 2 vs 3)
+
+Agent testimony is evidence, not a verdict
+  why:        a sloppy claim triggers a replay; only the replay decides
+
+Before/after = Revenant v1 (trusts commit's own tests, misses case 2) vs v2 (parent's exam)
+  instead of: comparing upstream agent runs
+
+Freeze is a normal outcome, not an exception
+```
+
+Decision order (deterministic):
+1. No checkpoint: freeze.
+2. Replay env fails: retry once, then freeze.
+3. Own exam regresses: revert*.
+4. Own exam passes but the parent's exam regresses: authorized means keep, not authorized
+   means revert*, and no quote means freeze.
+5. A later commit changed a callee: stale.
+6. Otherwise keep.
+
+\* Revert only if the commit is not mixed, the revert applies cleanly, and the exam is green at HEAD afterwards. Otherwise freeze.
+
+## Scope
+
+```text
+MUST    3 replays via verify, checkpoint reading, warrant, keep/revert/freeze,
+        ledger with restart, one revert PR, neatlogs on every run, cfo.ai plan, demo
+SHOULD  stale, revert check at HEAD, testimony from neatlogs spans, case 6, dogfood run
+NICE    cheaper-model cost comparison, dissent comments, re-check when HEAD moves
+CUT     hunk splitting, coverage rule, co-change, GitHub App, dashboard, writing tests,
+        agents other than Claude Code
+Floor:  cases 2, 3, 5, the ledger, one PR, neatlogs, cfo.ai
+```
+
+## Constraints
+
+```text
+All code written Oct 10 to 12        no pre-existing code; fixture repo built after kickoff
+Demo video <= 3 min                  must cover arch/impl/runtime/reasoning/result per tool
+Public repo                          no remote yet; must be public before submission
+verify exits 0 on regression         parse the VERDICT: line, never the exit code
+Unknown runner                       freeze, never revert on exit codes alone
+kill -9 loses unsent spans           neatlogs recovery evidence comes from a caught failure
+cfo.ai free AI credits are one-time  build the plan once, late, with measured costs
+```
+
+## What is real, what is staged
+
+**Real:** checkpoints, traces, replays, verdicts, the revert PR, the dogfood run.
+**Staged and disclosed:** the upstream agent's "make CI green fast" policy prompt, the
+fixture repo, and the test command and exam globs in config.

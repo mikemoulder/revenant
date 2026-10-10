@@ -1,5 +1,41 @@
-node_modules/
+# Environment. NEVER commit these. Commit .env.example instead.
 .env
 .env.*
-*.log
+!.env.example
+
+# Revenant scratch worktrees (the ledger in .revenant/ IS committed)
 .revenant/worktrees/
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+.venv/
+__pycache__/
+
+# Build and test output
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+.pytest_cache/
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor and OS
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# Deliberately NOT ignored:
+#   *.md          docs/ is judge-facing evidence (architecture, integrations,
+#                 evaluation map). Ignoring markdown hides it.
+#   handoff.md    shared continuity. a teammate who slept needs to read it.
+#   memory.md     shared project knowledge.
+#   .entire/settings.json, .claude/settings.json   Entire is a required tool;
+#                 its config is evidence it was on from the first commit.
