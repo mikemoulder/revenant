@@ -1,0 +1,106 @@
+[
+  {
+    "rev": "2a6d0a0",
+    "subject": "Reject charge() discounts outside 0-100",
+    "replay": {
+      "commit": "2a6d0a0f05df67c5f752c424276444ef256a1075",
+      "parent": "e00f0bd5d2a0ad84d8bb995626246e1025272716",
+      "mode": "v1",
+      "exam": "npx jest",
+      "baseline": "(jest/vitest; 4 passing, 0 failing, exit 0)",
+      "asCommitted": {
+        "outcome": "holds",
+        "line": "VERDICT: NO EFFECT — the target tests behave exactly as before your edit.",
+        "newlyFailing": [],
+        "exitCodeOnly": false
+      },
+      "originalExam": null,
+      "examFilesChanged": [
+        "M billing.test.js"
+      ],
+      "attempts": 1
+    },
+    "decision": {
+      "verdict": "keep",
+      "reason": "own exam holds against the parent baseline"
+    }
+  },
+  {
+    "rev": "87930b6",
+    "subject": "fix: roundCents rounds half-cent amounts up",
+    "replay": {
+      "commit": "87930b64e52b64cedcf834e6d4d4c62610bb94ba",
+      "parent": "3110c56bedeab4200a16a898734c075754e95266",
+      "mode": "v1",
+      "exam": "npx jest",
+      "baseline": "(jest/vitest; 8 passing, 0 failing, exit 0)",
+      "asCommitted": {
+        "outcome": "holds",
+        "line": "VERDICT: NO EFFECT — the target tests behave exactly as before your edit.",
+        "newlyFailing": [],
+        "exitCodeOnly": false
+      },
+      "originalExam": null,
+      "examFilesChanged": [
+        "M billing.test.js"
+      ],
+      "attempts": 1
+    },
+    "decision": {
+      "verdict": "keep",
+      "reason": "own exam holds against the parent baseline"
+    }
+  },
+  {
+    "rev": "51ba831",
+    "subject": "feat: add flat $2 handling fee to invoiceTotal",
+    "replay": {
+      "commit": "51ba831cadffcfba5fda4a584d0015046135b00f",
+      "parent": "20f7b189400ea3e8a2cfbc991e5a6e542b8fa73a",
+      "mode": "v1",
+      "exam": "npx jest",
+      "baseline": "(jest/vitest; 9 passing, 0 failing, exit 0)",
+      "asCommitted": {
+        "outcome": "regression",
+        "line": "VERDICT: REGRESSION in 1 test: ./billing.test.js > invoice total sums discounted lines",
+        "newlyFailing": [
+          "./billing.test.js > invoice total sums discounted lines"
+        ],
+        "exitCodeOnly": false
+      },
+      "originalExam": null,
+      "examFilesChanged": [],
+      "attempts": 1
+    },
+    "decision": {
+      "verdict": "revert",
+      "reason": "own exam regresses: VERDICT: REGRESSION in 1 test: ./billing.test.js > invoice total sums discounted lines"
+    }
+  },
+  {
+    "rev": "3110c56",
+    "subject": "test: cover vip pricing on a small amount",
+    "replay": {
+      "commit": "3110c56bedeab4200a16a898734c075754e95266",
+      "parent": "1ebc6699120438a55eb7599564056cc869ca9910",
+      "mode": "v1",
+      "exam": "npx jest",
+      "baseline": "(jest/vitest; 7 passing, 0 failing, exit 0)",
+      "asCommitted": {
+        "outcome": "holds",
+        "line": "VERDICT: NO EFFECT — the target tests behave exactly as before your edit.",
+        "newlyFailing": [],
+        "exitCodeOnly": false
+      },
+      "originalExam": null,
+      "examFilesChanged": [
+        "M billing.test.js"
+      ],
+      "attempts": 1
+    },
+    "decision": {
+      "verdict": "keep",
+      "reason": "own exam holds against the parent baseline"
+    }
+  }
+]
