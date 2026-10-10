@@ -11,7 +11,13 @@ freeze. Source design: `../REVENANT.md`.
 ## Stack
 
 ```text
-language / runner   TBD by /skillz:architecture (jest confirmed with verify; pytest unconfirmed)
+language / runner   TypeScript on Node 22 CLI; jest for the fixture. See docs/architecture-brief.md
+neatlogs read CLI   needs --host https://app.neatlogs.com and NEATLOGS_CONFIG_DIR=~/.config/neatlogs-cli
+                    (the Claude Code plugin owns ~/.config/neatlogs/config.json in another format;
+                    the CLI rejects it as UNSAFE_CONFIG_FILE). The ingest key cannot read traces,
+                    and NEATLOGS_API_KEY in env OVERRIDES the OAuth login: run the CLI with
+                    `env -u NEATLOGS_API_KEY ... --project 6501ac4a-c89a-4644-87e3-731a7c07a3d9`
+repo                https://github.com/mikemoulder/revenant (public). Entire pushes checkpoint refs on push
 Entire CLI          0.11.4, ~/.local/bin/entire. commit_linking: always (.entire/settings.json)
 neatlogs CLI        0.2.0. Claude Code plugin set up globally (~/.claude/settings.json)
 host                none needed. CLI plus a committed ledger; GitHub for the revert PR
@@ -85,6 +91,18 @@ verify exits 0 on regression         parse the VERDICT: line, never the exit cod
 Unknown runner                       freeze, never revert on exit codes alone
 kill -9 loses unsent spans           neatlogs recovery evidence comes from a caught failure
 cfo.ai free AI credits are one-time  build the plan once, late, with measured costs
+```
+
+## Lessons
+
+```text
+Entire's files_touched only lists files edited by Write/Edit    shell-written files are absent
+  (commit 05a4624: .env.example missing)                      so fixture sessions edit with Write/Edit,
+                                                               and attribution may read as mixed
+neatlogs join CONFIRMED: `traces list --session <claude id>`    one trace per user prompt, not per session.
+  returns traces with sessionId = Entire's session_id         pick the trace whose [startedAt, completedAt]
+                                                               holds the commit time (05a4624 -> 8bafa749)
+verify --setup "<cmd>" runs before the tests                    natural place for the caught-failure retry
 ```
 
 ## What is real, what is staged

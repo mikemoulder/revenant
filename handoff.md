@@ -4,16 +4,20 @@
 
 ## Next step
 
-Run `/skillz:architecture`. It picks the language and test runner, which hinges on whether
-`entire graph verify` parses pytest on this machine (jest is confirmed). After that, add a
-config file holding the test command and the exam globs (build order step 1), then fill in the
-Commands and Demo path sections in `CLAUDE.md`.
+Architecture is done: see `docs/architecture-brief.md` (TypeScript CLI, jest fixture, no
+DB, no host). Still uncommitted.
+
+Spike passed: the neatlogs session join works (see memory.md Lessons) and the repo is public.
+
+Build order step 1: `src/types.ts`, `src/seams/entire.ts`, `src/replay.ts` running three
+`verify` runs on a tiny jest repo. Load the claude-api skill before writing `src/seams/model.ts`.
+neatlogs OAuth token expires roughly hourly; re-run the device login when the CLI says UNAUTHORIZED.
 
 ## Current status
 
 **Working:** nothing yet. The repo holds the Entire setup and the workflow files.
 
-**Deployed:** n/a (no URL required). **No git remote yet**, and the repo must be public before submission.
+**Deployed:** n/a (no URL required). Public repo: https://github.com/mikemoulder/revenant
 
 **Build:** no code yet.
 
@@ -25,7 +29,8 @@ Commands and Demo path sections in `CLAUDE.md`.
 [x] .env.example is not ignored (git check-ignore)
 [x] entire 0.11.4, neatlogs 0.2.0, node 22, python 3.12 on PATH
 [ ] pytest / jest installed (neither on PATH)
-[ ] neatlogs traces list --session finds a Claude Code session
+[x] neatlogs traces list --session finds a Claude Code session (3 traces for 03edd784)
+[x] entire checkpoint explain 05a4624 --json returns session_id, model, tokens
 ```
 
 ## Remaining work
