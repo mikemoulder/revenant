@@ -1,0 +1,25 @@
+{
+  "name": "revenant",
+  "version": "0.1.0",
+  "description": "Catches coding agents that made the tests pass by editing the tests, and reverts them.",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "revenant": "src/cli.ts"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "revenant": "node src/cli.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "neatlogs": "^1.1.28"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "^5.9.3"
+  }
+}
