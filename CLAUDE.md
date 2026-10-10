@@ -1,6 +1,6 @@
 # Revenant
 
-Revenant catches commits where a coding agent got the tests to pass by editing the tests, then reverts those commits. It is for teams that let coding agents commit.
+Revenant audits the commits coding agents make. When an agent edits a test, it reads the prompt to decide whether that was allowed, and it reverts commits that break their own tests. CI can't do either. It is for teams that let coding agents commit.
 
 Hackathon: neatHack. Submission window: Oct 12, 7:00 to 11:55 PM IST (15:30 to 20:25 CEST).
 Feature freeze: **Oct 12, 4:00 PM IST (12:30 CEST)**. After that, only fixes, the demo video, the README and evidence.

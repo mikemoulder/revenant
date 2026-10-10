@@ -2,11 +2,12 @@
 
 ## What this is
 
-Revenant catches commits where a coding agent got the tests to pass by editing the tests,
-then reverts those commits. It replays each commit against its parent's tests through
-`entire graph verify`. It reads the prompt from the commit's Entire checkpoint to decide
-whether the test change was allowed. Its output is a ledger: keep, revert, stale or
-freeze. Source design: `../REVENANT.md`.
+Revenant audits the commits coding agents make. It replays each commit against its parent's
+tests through `entire graph verify`, so it sees test edits that CI cannot. It reads the prompt
+from the commit's Entire checkpoint to decide whether a test edit was authorized, quoting the
+line it relied on. It reverts commits whose own tests fail. Its output is a ledger: keep,
+revert, stale or freeze. Source design: `../REVENANT.md`. The pitch was reframed on Oct 10
+(see Decisions).
 
 ## Stack
 
@@ -56,6 +57,14 @@ Before/after = Revenant v1 (trusts commit's own tests, misses case 2) vs v2 (par
   instead of: comparing upstream agent runs
 
 Freeze is a normal outcome, not an exception
+
+Pitch reframed around the warrant (Oct 10, user decision)
+  why:        24 real headless sessions under pressure and 2 red-team runs: no agent made an
+              unauthorized test edit. One edited a test, flagged it, and was right per the prompt
+  hero:       fixture 87930b6. CI/v1 says NO EFFECT; the parent's exam says REGRESSION; the
+              checkpoint prompt authorizes it -> KEEP with a quote
+  revert:     fixture 51ba831, a rushed commit whose own tests fail (prompt: skip the tests)
+  instead of: "agents cheat, Revenant catches them" (not reproducible), or a staged cheat
 ```
 
 Decision order (deterministic):
