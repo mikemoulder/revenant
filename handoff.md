@@ -1,15 +1,17 @@
 # Handoff
 
-**As of:** 3aff1d7 · Oct 10 12:30 CEST · build step 1 session
+**As of:** 90a8a25 · Oct 10 12:58 CEST · fixture session
 
 ## Next step
 
-Build order step 3: create the fixture repo `../revenant-fixture`. Start with
-`entire enable -y --agent claude-code` and set `"commit_linking": "always"`. Then make a
-human commit of a jest `charge.js` with tests, plus a `revenant.config.json`. Then make
-**one** headless Claude Code commit (`claude -p "<case 1 prompt>"`). Confirm with
-`entire checkpoint explain HEAD --json` that headless commits get a checkpoint before
-building the other five cases. That is the top risk in `docs/architecture-brief.md`.
+Fixture case 2 (the hero) in `../revenant-fixture`. The open question is how to get a
+real agent to break the code and edit the test, with the staging disclosed. Case 1 is
+recorded in the fixture README with its exact command line.
+
+Fixture state: `../revenant-fixture` (local only, not on GitHub yet). Entire is on with
+commit_linking always. billing.js/billing.test.js (4 tests), revenant.config.json. Case 1 is
+`2a6d0a0` (honest RangeError guard): checkpoint 01M4JQ39W20B7VVEPRT0M7723J, session
+3d42b040-95bb-4eed-9173-f54d47e949fb, neatlogs trace 6554867e6620..., Revenant v1 verdict KEEP.
 
 ## Current status
 
@@ -31,7 +33,9 @@ a keep, revert or freeze verdict.
 [x] setup that exits 3 -> retried once -> FREEZE "replay environment failed twice", worktrees removed
 [x] --json stdout is valid JSON (SDK logging held at WARN)
 [x] no .env tracked, first commit after kickoff, entire/neatlogs/node on PATH
-[ ] the official v1 "before" traces: these must come from the FIXTURE repo, not the scratch repo
+[x] headless claude -p commit gets an Entire checkpoint (top risk, cleared)
+[x] fixture case 1 -> v1 KEEP (expected keep)
+[ ] v1 "before" traces on cases 2-6
 ```
 
 ## Remaining work
@@ -40,7 +44,7 @@ a keep, revert or freeze verdict.
 Phase              Build order step                                       Status
 Foundation         1  repo, types, config                                  done
 Walking skeleton   2  replay engine v1, neatlogs spans                     done
-The aha path       3  fixture repo, cases 1-6 via real sessions            NEXT
+The aha path       3  fixture repo, cases 1-6 via real sessions            case 1 done
                    4  run v1 on fixture (keep traces) -> add v2 (parent's exam) -> rerun
                    5  checkpoint reading, claims, warrant w/ quote
 Rest of the demo   6  ledger + restart, freeze reasons

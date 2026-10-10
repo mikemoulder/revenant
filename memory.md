@@ -109,6 +109,12 @@ verify --setup "<cmd>" that FAILS is ignored;                   Revenant runs se
   verify runs the tests anyway                                 so the failure is a real ERROR span + retry
 verify wording: PASS | NO EFFECT | REGRESSION in N |           "(exit N)" forms are exit-code only -> unknown.
   PASS (exit 0) | FAIL (exit N)                                an unchanged suite says NO EFFECT, not PASS
+Headless `claude -p` commits DO get checkpoints (fixture 2a6d0a0)  the fixture can be built headless
+  and neatlogs finds the trace by session id                   transcript JSONL line 1 holds the prompt
+No Entire-Attribution trailer on commits (0.11.4)              mixed-commit check uses `entire blame <file>`
+                                                               tags per line: [HU] [AI] [MX]
+neatlogs session cost ($0.004) != claude -p cost ($0.079)      quote neither as truth until understood
+Headless Claude adds its own Co-Authored-By trailer            fine in the fixture; it is the agent's own habit
 neatlogs public API (raw-spans) omits span attributes           ids are duplicated into span input
 neatlogs SDK logs INFO to stdout, level read at import          NEATLOGS_LOG_LEVEL=WARN before dynamic import
 ```
