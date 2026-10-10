@@ -27,6 +27,11 @@ export async function pruneWorktrees(repo: string): Promise<void> {
   await git(repo, "worktree", "prune");
 }
 
+/** Overwrite paths in a worktree with their content at another commit. */
+export async function restoreFiles(worktree: string, fromSha: string, paths: string[]): Promise<void> {
+  if (paths.length > 0) await git(worktree, "checkout", fromSha, "--", ...paths);
+}
+
 export interface ChangedFile {
   status: "A" | "M" | "D" | string;
   path: string;

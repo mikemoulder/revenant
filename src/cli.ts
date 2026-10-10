@@ -3,15 +3,17 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
-import { decideV1 } from "./decide.ts";
+import { decideV1, decideV2 } from "./decide.ts";
 import { replay } from "./replay.ts";
 import { subjectOf } from "./seams/git.ts";
 import { initTracing, shutdownTracing, step } from "./seams/trace.ts";
-import { ReplayEnvError, type Decision, type ExamConfig, type ReplayResult } from "./types.ts";
+import { ReplayEnvError, type Decision, type ExamConfig, type Mode, type ReplayResult } from "./types.ts";
 
-const USAGE = `usage: revenant replay <commit>... --repo <path> [--config <file>] [--json]
+const USAGE = `usage: revenant replay <commit>... --repo <path> [--mode v1|v2] [--config <file>] [--json]
 
 Replays each commit against its parent with entire graph verify and prints the verdict.
+v1 trusts the commit's own tests, as CI does. v2 (default) also runs the parent's tests
+on the commit's code, which shows when a commit edited its tests to change behaviour.
 The exam (test command, setup, exam globs) comes from <repo>/revenant.config.json.`;
 
 const WORK_ROOT = fileURLToPath(new URL("../.revenant/worktrees/", import.meta.url));
@@ -25,16 +27,17 @@ function loadConfig(path: string): ExamConfig {
   return cfg;
 }
 
-function print(rev: string, subject: string, r: ReplayResult | null, d: Decision): void {
+function print(rev: string, subject: string, r: ReplayResult | null, d: Decision, mode: Mode): void {
   const row = (k: string, v: string) => console.log(`  ${k.padEnd(18)}${v}`);
   console.log(`\n${r ? r.commit.slice(0, 7) : rev}  ${subject}`);
   if (r) {
     row("parent baseline", r.baseline);
     row("as committed", r.asCommitted.line);
+    if (mode === "v2") row("parent's exam", r.originalExam?.line ?? "not needed, no exam files changed");
     row("exam files", r.examFilesChanged.join(", ") || "none changed");
     row("attempts", String(r.attempts));
   }
-  row("verdict (v1)", `${d.verdict.toUpperCase()}  ${d.reason}`);
+  row(`verdict (${mode})`, `${d.verdict.toUpperCase()}  ${d.reason}`);
 }
 
 async function main(): Promise<number> {
@@ -43,6 +46,7 @@ async function main(): Promise<number> {
     options: {
       repo: { type: "string" },
       config: { type: "string" },
+      mode: { type: "string", default: "v2" },
       json: { type: "boolean", default: false },
       help: { type: "boolean", short: "h", default: false },
     },
@@ -52,6 +56,11 @@ async function main(): Promise<number> {
     console.error(USAGE);
     return values.help ? 0 : 2;
   }
+  const mode = values.mode as Mode;
+  if (mode !== "v1" && mode !== "v2") {
+    console.error(`--mode must be v1 or v2, got ${values.mode}`);
+    return 2;
+  }
   if (existsSync(".env")) process.loadEnvFile(".env");
 
   const repo = resolve(values.repo);
@@ -59,20 +68,20 @@ async function main(): Promise<number> {
 
   await initTracing();
   try {
-    const results = await step("audit", "WORKFLOW", { "revenant.repo": repo, "revenant.mode": "v1", "revenant.commits": revs.length }, async () => {
+    const results = await step("audit", "WORKFLOW", { "revenant.repo": repo, "revenant.mode": mode, "revenant.commits": revs.length }, async () => {
       const out = [];
       for (const rev of revs) {
         const subject = await subjectOf(repo, rev);
         let r: ReplayResult | null = null;
         let d: Decision;
         try {
-          r = await replay(repo, rev, cfg, WORK_ROOT);
-          d = decideV1(r);
+          r = await replay(repo, rev, cfg, WORK_ROOT, mode);
+          d = mode === "v1" ? decideV1(r) : decideV2(r);
         } catch (err) {
           if (!(err instanceof ReplayEnvError)) throw err;
           d = { verdict: "freeze", reason: `replay environment failed twice: ${err.message}` };
         }
-        if (!values.json) print(rev, subject, r, d);
+        if (!values.json) print(rev, subject, r, d, mode);
         out.push({ rev, subject, replay: r, decision: d });
       }
       return out;

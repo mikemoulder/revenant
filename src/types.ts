@@ -24,14 +24,23 @@ export interface ExamConfig {
   exam: string[];
 }
 
+/** v1 trusts the commit's own tests, as CI does. v2 also replays the parent's tests on the commit's code. */
+export type Mode = "v1" | "v2";
+
 export interface ReplayResult {
   commit: string;
   parent: string;
+  mode: Mode;
   exam: string;
   /** The parent's own tests on the parent's code. */
   baseline: string;
   /** The commit's tests on the commit's code. What CI would say. */
   asCommitted: VerifyResult;
+  /**
+   * The commit's code with the parent's exam files restored: the tests as they were before
+   * the agent touched them. Null in v1, or when the commit changed no exam files.
+   */
+  originalExam: VerifyResult | null;
   /** Exam files the commit added, modified or deleted. */
   examFilesChanged: string[];
   attempts: number;
