@@ -102,6 +102,9 @@ Entire's files_touched only lists files edited by Write/Edit    shell-written fi
 neatlogs join CONFIRMED: `traces list --session <claude id>`    one trace per user prompt, not per session.
   returns traces with sessionId = Entire's session_id         pick the trace whose [startedAt, completedAt]
                                                                holds the commit time (05a4624 -> 8bafa749)
+Push of a commit with a NEW checkpoint fails: "main -> main    Entire's pre-push hook pushes the checkpoint ref
+  (failed)". Seen on 05a4624 and f363a59                      fine, main is rejected. Second push succeeds.
+                                                               Always: `git push || git push`
 verify --setup "<cmd>" runs before the tests                    natural place for the caught-failure retry
 ```
 
