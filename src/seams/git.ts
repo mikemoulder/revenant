@@ -11,6 +11,10 @@ export async function parentOf(repo: string, sha: string): Promise<string> {
   return resolveSha(repo, `${sha}^1`);
 }
 
+export async function subjectOf(repo: string, sha: string): Promise<string> {
+  return (await git(repo, "log", "-1", "--format=%s", sha)).trim();
+}
+
 export async function addWorktree(repo: string, path: string, sha: string): Promise<void> {
   await git(repo, "worktree", "add", "--force", "--detach", path, sha);
 }
