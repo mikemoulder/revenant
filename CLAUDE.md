@@ -26,7 +26,7 @@ TypeScript run directly by Node 22 (no build step). Architecture: `docs/architec
 
 ```bash
 npm run typecheck                            # cheapest useful check, before every commit
-node src/cli.ts replay <sha>... --repo <path> [--json]   # exam from <path>/revenant.config.json
+node src/cli.ts audit <sha>... --repo <path> [--mode v1|v2] [--json]   # exam from <path>/revenant.config.json
 git push || git push                         # first push after a new checkpoint fails, see memory.md
 
 # replay engine (verify exits 0 even on a regression: read the VERDICT: line)
