@@ -19,6 +19,12 @@ export async function initTracing(): Promise<void> {
   if (!exporting) console.error("neatlogs: NEATLOGS_API_KEY not set, spans are not exported");
 }
 
+/** The loaded SDK, for wrapping model clients so every call becomes an LLM span. */
+export function neatlogs(): Neatlogs {
+  if (!nl) throw new Error("initTracing() must run first");
+  return nl;
+}
+
 export async function shutdownTracing(): Promise<void> {
   await nl?.shutdown();
 }

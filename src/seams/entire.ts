@@ -1,5 +1,5 @@
 import { exec } from "./exec.ts";
-import { ReplayEnvError, type VerifyResult } from "../types.ts";
+import { ReplayEnvError, type Checkpoint, type VerifyResult } from "../types.ts";
 
 const VERIFY_TIMEOUT_MS = 120_000;
 
@@ -56,4 +56,48 @@ export async function verifyAgainst(repo: string, test: string, baseline: string
   const result = parseVerify(await runVerify({ repo, test, preEditBaseline: baseline }));
   if (!result.line) throw new ReplayEnvError("verify", "no VERDICT line in output");
   return result;
+}
+
+interface ExplainJson {
+  checkpoint_id: string;
+  sessions: { index: number; session_id: string; agent: string; model: string }[];
+}
+
+/**
+ * The user prompts in one session's transcript, up to `before` (the commit time), so a
+ * session that made several commits only contributes the turns that led to this one.
+ * Tool results and hook output are not prompts and are skipped.
+ */
+function promptsFromTranscript(jsonl: string, before: Date): string[] {
+  const prompts: string[] = [];
+  for (const line of jsonl.split("\n")) {
+    if (!line.trim()) continue;
+    let entry: { type?: string; timestamp?: string; message?: { content?: unknown } };
+    try {
+      entry = JSON.parse(line);
+    } catch {
+      continue;
+    }
+    if (entry.type !== "user" || !entry.timestamp || new Date(entry.timestamp) > before) continue;
+    const content = entry.message?.content;
+    if (typeof content === "string") prompts.push(content);
+    else if (Array.isArray(content)) {
+      for (const block of content) if (block?.type === "text" && typeof block.text === "string") prompts.push(block.text);
+    }
+  }
+  return prompts;
+}
+
+/** The checkpoint behind a commit, or null when Entire has none (a human commit, or Entire was off). */
+export async function checkpointFor(repo: string, sha: string, committedAt: Date): Promise<Checkpoint | null> {
+  const r = await exec("entire", ["checkpoint", "explain", sha, "--json"], { cwd: repo, timeoutMs: 30_000 });
+  // entire exits 0 and prints "checkpoint not found: <sha>" when there is none.
+  if (r.code !== 0 || !r.stdout.trimStart().startsWith("{")) return null;
+  const meta = JSON.parse(r.stdout) as ExplainJson;
+  const sessions = [];
+  for (const s of meta.sessions) {
+    const t = await exec("entire", ["checkpoint", "explain", sha, "--transcript", "--session-index", String(s.index)], { cwd: repo, timeoutMs: 30_000 });
+    sessions.push({ sessionId: s.session_id, agent: s.agent, model: s.model, prompts: promptsFromTranscript(t.stdout, committedAt) });
+  }
+  return { id: meta.checkpoint_id, sessions };
 }

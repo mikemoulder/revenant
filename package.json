@@ -16,7 +16,9 @@
   },
   "license": "MIT",
   "dependencies": {
-    "neatlogs": "^1.1.28"
+    "@anthropic-ai/sdk": "^0.133.0",
+    "neatlogs": "^1.1.28",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@opentelemetry/api": "^1.9.1",

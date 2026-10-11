@@ -3,17 +3,16 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
-import { decideV1, decideV2 } from "./decide.ts";
-import { replay } from "./replay.ts";
-import { subjectOf } from "./seams/git.ts";
+import { auditCommit, type AuditResult } from "./audit.ts";
 import { initTracing, shutdownTracing, step } from "./seams/trace.ts";
-import { ReplayEnvError, type Decision, type ExamConfig, type Mode, type ReplayResult } from "./types.ts";
+import type { ExamConfig, Mode } from "./types.ts";
 
-const USAGE = `usage: revenant replay <commit>... --repo <path> [--mode v1|v2] [--config <file>] [--json]
+const USAGE = `usage: revenant audit <commit>... --repo <path> [--mode v1|v2] [--config <file>] [--json]
 
-Replays each commit against its parent with entire graph verify and prints the verdict.
-v1 trusts the commit's own tests, as CI does. v2 (default) also runs the parent's tests
-on the commit's code, which shows when a commit edited its tests to change behaviour.
+Puts each commit on trial and prints a verdict: keep, revert, stale or freeze.
+v1 trusts the commit's own tests, as CI does. v2 (default) reads the commit's Entire
+checkpoint, also runs the parent's tests on the commit's code, and when the commit changed
+behaviour its old tests pinned, asks whether the prompt authorized it (quoting the prompt).
 The exam (test command, setup, exam globs) comes from <repo>/revenant.config.json.`;
 
 const WORK_ROOT = fileURLToPath(new URL("../.revenant/worktrees/", import.meta.url));
@@ -27,9 +26,16 @@ function loadConfig(path: string): ExamConfig {
   return cfg;
 }
 
-function print(rev: string, subject: string, r: ReplayResult | null, d: Decision, mode: Mode): void {
+function print(a: AuditResult, mode: Mode): void {
   const row = (k: string, v: string) => console.log(`  ${k.padEnd(18)}${v}`);
-  console.log(`\n${r ? r.commit.slice(0, 7) : rev}  ${subject}`);
+  const r = a.replay;
+  const d = a.decision;
+  console.log(`\n${a.commit.slice(0, 7)}  ${a.subject}`);
+  if (mode === "v2") {
+    const s = a.checkpoint?.sessions[0];
+    row("checkpoint", a.checkpoint ? `${a.checkpoint.id} (${s?.agent}, ${s?.model})` : "none");
+    if (s?.prompts[0]) row("prompt", JSON.stringify(s.prompts[0]));
+  }
   if (r) {
     row("parent baseline", r.baseline);
     row("as committed", r.asCommitted.line);
@@ -37,6 +43,7 @@ function print(rev: string, subject: string, r: ReplayResult | null, d: Decision
     row("exam files", r.examFilesChanged.join(", ") || "none changed");
     row("attempts", String(r.attempts));
   }
+  if (a.warrant) row("warrant", `${a.warrant.answer}${a.warrant.quote ? `: "${a.warrant.quote}"` : ""} (${a.warrant.model})`);
   row(`verdict (${mode})`, `${d.verdict.toUpperCase()}  ${d.reason}`);
 }
 
@@ -52,7 +59,7 @@ async function main(): Promise<number> {
     },
   });
   const [command, ...revs] = positionals;
-  if (values.help || command !== "replay" || revs.length === 0 || !values.repo) {
+  if (values.help || (command !== "audit" && command !== "replay") || revs.length === 0 || !values.repo) {
     console.error(USAGE);
     return values.help ? 0 : 2;
   }
@@ -71,18 +78,9 @@ async function main(): Promise<number> {
     const results = await step("audit", "WORKFLOW", { "revenant.repo": repo, "revenant.mode": mode, "revenant.commits": revs.length }, async () => {
       const out = [];
       for (const rev of revs) {
-        const subject = await subjectOf(repo, rev);
-        let r: ReplayResult | null = null;
-        let d: Decision;
-        try {
-          r = await replay(repo, rev, cfg, WORK_ROOT, mode);
-          d = mode === "v1" ? decideV1(r) : decideV2(r);
-        } catch (err) {
-          if (!(err instanceof ReplayEnvError)) throw err;
-          d = { verdict: "freeze", reason: `replay environment failed twice: ${err.message}` };
-        }
-        if (!values.json) print(rev, subject, r, d, mode);
-        out.push({ rev, subject, replay: r, decision: d });
+        const a = await auditCommit(repo, rev, cfg, WORK_ROOT, mode);
+        if (!values.json) print(a, mode);
+        out.push({ rev, ...a });
       }
       return out;
     });

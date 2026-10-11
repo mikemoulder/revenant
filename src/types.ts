@@ -46,6 +46,20 @@ export interface ReplayResult {
   attempts: number;
 }
 
+/** What Entire recorded behind a commit: the agent sessions and the prompts they were given. */
+export interface Checkpoint {
+  id: string;
+  sessions: { sessionId: string; agent: string; model: string; prompts: string[] }[];
+}
+
+/** The model's reading of the prompts. A quote must appear verbatim in a prompt, or it does not count. */
+export interface Warrant {
+  answer: "authorized" | "not_authorized" | "unclear";
+  quote: string | null;
+  reasoning: string;
+  model: string;
+}
+
 export interface Decision {
   verdict: Verdict;
   reason: string;

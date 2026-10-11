@@ -11,6 +11,15 @@ export async function parentOf(repo: string, sha: string): Promise<string> {
   return resolveSha(repo, `${sha}^1`);
 }
 
+export async function committedAt(repo: string, sha: string): Promise<Date> {
+  return new Date((await git(repo, "log", "-1", "--format=%cI", sha)).trim());
+}
+
+/** The full patch a commit introduced, for the warrant to read. */
+export async function commitDiff(repo: string, parent: string, sha: string): Promise<string> {
+  return git(repo, "diff", "--no-color", parent, sha);
+}
+
 export async function subjectOf(repo: string, sha: string): Promise<string> {
   return (await git(repo, "log", "-1", "--format=%s", sha)).trim();
 }
